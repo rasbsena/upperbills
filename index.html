@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamentos Pendentes | Upperfy</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237C3AED'/><text x='50' y='68' font-size='50' font-family='Arial,sans-serif' font-weight='bold' fill='white' text-anchor='middle'>U</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --upperfy-primary: #7C3AED;
+            --upperfy-primary-dark: #6D28D9;
+            --upperfy-primary-light: #A78BFA;
+            --upperfy-accent: #F97316;
+            --upperfy-accent-light: #FB923C;
+            --upperfy-accent-dark: #EA580C;
+            --upperfy-dark: #0F0A1A;
+            --upperfy-dark-soft: #1A1025;
+            --upperfy-gray: #2D2438;
+            --upperfy-gray-light: #4A3D5C;
+            --upperfy-text: #F5F3FF;
+            --upperfy-text-muted: #A8A0B8;
+            --upperfy-success: #10B981;
+            --upperfy-warning: #F97316;
+            --upperfy-danger: #EF4444;
+            --upperfy-info: #3B82F6;
+            --upperfy-border: rgba(124, 58, 237, 0.25);
+            --shadow-glow: 0 0 60px rgba(124, 58, 237, 0.2);
+            --shadow-glow-accent: 0 0 40px rgba(249, 115, 22, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--upperfy-dark);
+            color: var(--upperfy-text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(249, 115, 22, 0.08) 0%, transparent 50%),
+                linear-gradient(180deg, var(--upperfy-dark) 0%, #0A0612 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ==================== LOGIN ==================== */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--upperfy-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .login-overlay.hidden { display: none; }
+
+        .login-container {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: var(--shadow-glow);
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, var(--upperfy-primary) 0%, var(--upperfy-accent) 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 32px;
+            color: white;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
+        }
+
+        .login-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .login-subtitle { color: var(--upperfy-text-muted); font-size: 14px; margin-bottom: 32px; }
+
+        .login-form { display: flex; flex-direction: column; gap: 16px; }
+
+        .form-group-login { text-align: left; }
+
+        .form-label-login {
+            display: block;
+            font-size: 13px;
+            color: var(--upperfy-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: var(--upperfy-dark);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            color: var(--upperfy-text);
+            font-family: inherit;
+            font-size: 15px;
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: var(--upperfy-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        .login-input::placeholder { color: var(--upperfy-gray-light); }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--upperfy-primary) 0%, var(--upperfy-primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+        .login-btn:hover {
+            background: linear-gradient(135deg, var(--upperfy-primary-light) 0%, var(--upperfy-primary) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-error { color: var(--upperfy-danger); font-size: 13px; margin-top: 16px; display: none; }
+        .login-error.show { display: block; }
+
+        /* ==================== NAV MENU ==================== */
+        .nav-menu {
+            background: rgba(15, 10, 26, 0.95);
+            border-bottom: 1px solid var(--upperfy-border);
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0;
+        }
+
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--upperfy-primary) 0%, var(--upperfy-accent) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+        }
+
+        .nav-brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--upperfy-text) 0%, var(--upperfy-accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 12px 20px;
+            color: var(--upperfy-text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-link:hover { color: var(--upperfy-text); background: var(--upperfy-gray); }
+        .nav-link.active { color: var(--upperfy-accent); background: rgba(249, 115, 22, 0.1); }
+        .nav-link svg { width: 18px; height: 18px; }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: var(--upperfy-gray);
+            border-radius: 8px;
+        }
+
+        .nav-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--upperfy-primary) 0%, var(--upperfy-accent) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+        }
+
+        .nav-user-info { display: flex; flex-direction: column; }
+        .nav-user-name { font-size: 13px; font-weight: 600; color: var(--upperfy-text); }
+        .nav-user-company { font-size: 11px; color: var(--upperfy-text-muted); }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid var(--upperfy-border);
+            border-radius: 8px;
+            color: var(--upperfy-text-muted);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-logout:hover {
+            border-color: var(--upperfy-danger);
+            color: var(--upperfy-danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .btn-logout svg { width: 16px; height: 16px; }
+
+        /* ==================== APP CONTAINER ==================== */
+        .app-container { display: none; }
+        .app-container.visible { display: block; }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            padding: 24px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--upperfy-border);
+            background: rgba(15, 10, 26, 0.5);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 24px; }
+
+        .page-title-inline {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-title-inline svg { color: var(--upperfy-accent); width: 28px; height: 28px; }
+
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--upperfy-success);
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            background: var(--upperfy-success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .btn-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--upperfy-primary) 0%, var(--upperfy-primary-dark) 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-refresh:hover {
+            background: linear-gradient(135deg, var(--upperfy-primary-light) 0%, var(--upperfy-primary) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
+        }
+        .btn-refresh svg { width: 18px; height: 18px; }
+        .btn-refresh.loading svg { animation: spin 1s linear infinite; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .main-content {
+            padding: 32px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ==================== SEARCH SECTION ==================== */
+        .search-section {
+            margin-bottom: 32px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            color: var(--upperfy-text);
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--upperfy-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        .search-input::placeholder { color: var(--upperfy-gray-light); }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--upperfy-text-muted);
+            width: 20px; height: 20px;
+        }
+
+        .search-type-select {
+            padding: 14px 20px;
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            color: var(--upperfy-text);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+        }
+        .search-type-select:focus { outline: none; border-color: var(--upperfy-primary); }
+
+        /* Search Results Dropdown */
+        .search-results {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        .search-results.show { display: block; }
+
+        .search-results-header {
+            padding: 12px 16px;
+            background: rgba(124, 58, 237, 0.1);
+            border-bottom: 1px solid var(--upperfy-border);
+            font-size: 13px;
+            color: var(--upperfy-text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-result-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--upperfy-border);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 16px;
+            align-items: center;
+        }
+        .search-result-item:hover { background: rgba(124, 58, 237, 0.08); }
+        .search-result-item:last-child { border-bottom: none; }
+
+        .result-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--upperfy-text-muted);
+            background: var(--upperfy-gray);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .result-info { display: flex; flex-direction: column; gap: 4px; }
+        .result-identificacao { font-weight: 600; font-size: 14px; }
+        .result-descricao { font-size: 12px; color: var(--upperfy-text-muted); }
+
+        .result-valor {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--upperfy-accent);
+        }
+
+        .result-badges { display: flex; gap: 6px; }
+
+        .btn-close-search {
+            background: transparent;
+            border: none;
+            color: var(--upperfy-text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+        .btn-close-search:hover { color: var(--upperfy-text); }
+
+        /* ==================== STATS GRID ==================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { border-color: var(--upperfy-primary); box-shadow: var(--shadow-glow); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--upperfy-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-value.currency { color: var(--upperfy-accent); }
+        .stat-value.count { color: var(--upperfy-danger); }
+        .stat-value.info { color: var(--upperfy-info); }
+        .stat-value.success { color: var(--upperfy-success); }
+
+        /* ==================== CHARTS SECTION ==================== */
+        .charts-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title svg { color: var(--upperfy-primary-light); width: 20px; height: 20px; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--upperfy-text-muted);
+        }
+
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+
+        /* ==================== TABLE ==================== */
+        .table-container {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--upperfy-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(124, 58, 237, 0.05);
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .table-title svg { color: var(--upperfy-primary-light); }
+
+        .record-count {
+            font-size: 13px;
+            color: var(--upperfy-text-muted);
+            background: var(--upperfy-gray);
+            padding: 6px 12px;
+            border-radius: 100px;
+        }
+
+        .table-wrapper { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead { background: rgba(124, 58, 237, 0.08); }
+
+        th {
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--upperfy-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--upperfy-border);
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        td {
+            padding: 12px 10px;
+            font-size: 12px;
+            border-bottom: 1px solid var(--upperfy-border);
+            vertical-align: middle;
+        }
+
+        tbody tr { transition: background 0.2s ease; }
+        tbody tr:hover { background: rgba(124, 58, 237, 0.08); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .badge-pix { background: rgba(16, 185, 129, 0.2); color: var(--upperfy-success); }
+        .badge-boleto { background: rgba(59, 130, 246, 0.2); color: var(--upperfy-info); }
+        .badge-tipo { background: rgba(249, 115, 22, 0.2); color: var(--upperfy-accent); }
+
+        .cell-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--upperfy-text-muted);
+            background: var(--upperfy-gray);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .cell-identificacao { 
+            font-weight: 600; 
+            max-width: 140px;
+            word-break: break-word;
+        }
+
+        .cell-valor {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--upperfy-accent);
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        .cell-titulo {
+            max-width: 120px;
+            font-size: 12px;
+            color: var(--upperfy-text);
+            word-break: break-word;
+        }
+
+        .cell-descricao {
+            max-width: 180px;
+            color: var(--upperfy-text-muted);
+            font-size: 12px;
+        }
+
+        .desc-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .desc-full { display: none; }
+        .desc-full.show { display: block; }
+        .desc-text.hidden { display: none; }
+
+        .btn-ver-mais {
+            background: none;
+            border: none;
+            color: var(--upperfy-primary-light);
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 0;
+            margin-top: 4px;
+        }
+        .btn-ver-mais:hover { text-decoration: underline; }
+
+        .cell-linha {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--upperfy-text-muted);
+            background: var(--upperfy-dark);
+            padding: 6px 10px;
+            border-radius: 6px;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            display: block;
+            border: 1px solid transparent;
+        }
+        .cell-linha:hover {
+            background: var(--upperfy-gray);
+            color: var(--upperfy-text);
+            border-color: var(--upperfy-primary);
+        }
+
+        .cell-data {
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .cell-data .date { color: var(--upperfy-text); font-weight: 500; }
+        .cell-data .time { font-size: 11px; color: var(--upperfy-text-muted); }
+
+        .cell-badges { display: flex; flex-direction: column; gap: 4px; }
+
+        .cell-actions { display: flex; gap: 6px; }
+
+        .btn-action {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-lancar {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--upperfy-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .btn-lancar:hover {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: var(--upperfy-success);
+        }
+
+        .btn-link {
+            padding: 6px 10px;
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            border-radius: 6px;
+            color: var(--upperfy-accent-light);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-link:hover {
+            background: rgba(249, 115, 22, 0.25);
+            border-color: var(--upperfy-accent);
+        }
+
+        .no-link { color: var(--upperfy-gray-light); font-size: 12px; font-style: italic; }
+
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9000;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--upperfy-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-title svg { color: var(--upperfy-success); }
+
+        .btn-close-modal {
+            background: transparent;
+            border: none;
+            color: var(--upperfy-text-muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .btn-close-modal:hover { background: var(--upperfy-gray); color: var(--upperfy-text); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-info-card {
+            background: var(--upperfy-dark);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .modal-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--upperfy-border);
+        }
+        .modal-info-row:last-child { border-bottom: none; }
+
+        .modal-info-label { color: var(--upperfy-text-muted); font-size: 13px; }
+        .modal-info-value { font-weight: 600; font-size: 14px; }
+        .modal-info-value.highlight { color: var(--upperfy-accent); }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--upperfy-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--upperfy-dark);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 10px;
+            color: var(--upperfy-text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--upperfy-primary);
+        }
+
+        .form-textarea { min-height: 80px; resize: vertical; }
+
+        .file-upload-area {
+            border: 2px dashed var(--upperfy-border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .file-upload-area:hover {
+            border-color: var(--upperfy-primary);
+            background: rgba(124, 58, 237, 0.05);
+        }
+        .file-upload-area.has-file {
+            border-color: var(--upperfy-success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--upperfy-text-muted);
+        }
+
+        .file-upload-text { color: var(--upperfy-text-muted); font-size: 14px; }
+        .file-upload-text span { color: var(--upperfy-primary-light); font-weight: 600; }
+
+        .file-name {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: var(--upperfy-gray);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--upperfy-text);
+            display: none;
+        }
+        .file-name.show { display: block; }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--upperfy-border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-modal {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-modal-secondary {
+            background: transparent;
+            border: 1px solid var(--upperfy-border);
+            color: var(--upperfy-text-muted);
+        }
+        .btn-modal-secondary:hover {
+            border-color: var(--upperfy-text-muted);
+            color: var(--upperfy-text);
+        }
+
+        .btn-modal-success {
+            background: var(--upperfy-success);
+            border: none;
+            color: white;
+        }
+        .btn-modal-success:hover {
+            background: #0D9668;
+            transform: translateY(-1px);
+        }
+        .btn-modal-success:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ==================== LOADING & STATES ==================== */
+        .loading-overlay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--upperfy-border);
+            border-top-color: var(--upperfy-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text { color: var(--upperfy-text-muted); font-size: 14px; }
+
+        .empty-state, .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .empty-icon, .error-icon {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .empty-icon { background: rgba(16, 185, 129, 0.1); }
+        .empty-icon svg { width: 32px; height: 32px; color: var(--upperfy-success); }
+        .error-icon { background: rgba(239, 68, 68, 0.1); }
+        .error-icon svg { width: 32px; height: 32px; color: var(--upperfy-danger); }
+
+        .empty-title, .error-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .error-title { color: var(--upperfy-danger); }
+        .empty-description, .error-description { color: var(--upperfy-text-muted); font-size: 14px; }
+
+        /* ==================== TOAST ==================== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: var(--upperfy-dark-soft);
+            border: 1px solid var(--upperfy-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--upperfy-success); }
+        .toast.error { border-color: var(--upperfy-danger); }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            padding: 24px 40px;
+            text-align: center;
+            color: var(--upperfy-text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--upperfy-border);
+            margin-top: 40px;
+        }
+        .footer span { color: var(--upperfy-accent); }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1200px) {
+            .cell-descricao { max-width: 150px; }
+            .cell-linha { max-width: 140px; }
+            .cell-identificacao { max-width: 120px; }
+        }
+
+        @media (max-width: 992px) {
+            .main-content { padding: 20px; }
+            .charts-grid { grid-template-columns: repeat(2, 1fr); }
+            th, td { padding: 10px 8px; font-size: 11px; }
+            .cell-descricao { max-width: 120px; }
+            .cell-linha { max-width: 120px; font-size: 9px; }
+            .btn-action { padding: 5px 8px; font-size: 10px; }
+            .cell-actions { flex-direction: column; gap: 4px; }
+            .nav-user-info { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu { padding: 0 16px; }
+            .nav-links { display: none; }
+            .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
+            .header-left { width: 100%; justify-content: center; }
+            .header-actions { width: 100%; justify-content: center; flex-wrap: wrap; }
+            .main-content { padding: 16px; }
+            .search-container { flex-direction: column; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .stat-card { padding: 16px; }
+            .stat-value { font-size: 20px; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .table-wrapper { 
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            table { min-width: 900px; }
+            th, td { padding: 10px 12px; font-size: 12px; }
+            .modal { margin: 10px; max-height: 95vh; }
+            .modal-body { padding: 16px; }
+            .modal-footer { padding: 16px; flex-direction: column; }
+            .btn-modal { width: 100%; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .page-title-inline { font-size: 18px; }
+            .page-title-inline svg { width: 22px; height: 22px; }
+            .btn-refresh { padding: 8px 12px; font-size: 12px; }
+            .login-container { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== LOGIN ==================== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-container">
+            <div class="login-logo">U</div>
+            <h1 class="login-title">Acesso ao Sistema</h1>
+            <p class="login-subtitle">Entre com suas credenciais para continuar</p>
+            <div class="login-form">
+                <div class="form-group-login">
+                    <label class="form-label-login">E-mail</label>
+                    <input type="email" class="login-input" id="emailInput" placeholder="seu@email.com" autocomplete="email">
+                </div>
+                <div class="form-group-login">
+                    <label class="form-label-login">Senha</label>
+                    <input type="password" class="login-input" id="senhaInput" placeholder="Digite sua senha" autocomplete="current-password">
+                </div>
+                <button class="login-btn" id="btnLogin" onclick="doLogin()">Entrar</button>
+            </div>
+            <p class="login-error" id="loginError">Credenciais inválidas. Tente novamente.</p>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP ==================== -->
+    <div class="app-container" id="appContainer">
+        <!-- Nav Menu -->
+        <nav class="nav-menu">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <div class="nav-logo">U</div>
+                    <span class="nav-brand-name">Upperfy</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#" class="nav-link active">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Central de Boletos
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <div class="nav-user">
+                        <div class="nav-user-avatar" id="userAvatar">--</div>
+                        <div class="nav-user-info">
+                            <span class="nav-user-name" id="userName">Carregando...</span>
+                            <span class="nav-user-company" id="userCompany">--</span>
+                        </div>
+                    </div>
+                    <button class="btn-logout" onclick="logout()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="page-title-inline">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Pagamentos Pendentes
+                </h1>
+            </div>
+            <div class="header-actions">
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Conectado</span>
+                </div>
+                <button class="btn-refresh" id="btnRefresh" onclick="loadData()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Atualizar
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input type="text" class="search-input" id="searchInput" placeholder="Buscar por identificação ou data (ex: 08/12/2025)...">
+                    </div>
+                    <select class="search-type-select" id="searchType">
+                        <option value="identificacao">Por Identificação</option>
+                        <option value="data_erro">Por Data do Erro</option>
+                    </select>
+                </div>
+                <div class="search-results" id="searchResults">
+                    <div class="search-results-header">
+                        <span id="searchResultsCount">0 resultados encontrados</span>
+                        <button class="btn-close-search" onclick="closeSearchResults()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="searchResultsList"></div>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Pendente</div>
+                    <div class="stat-value count" id="statCount">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Valor Total</div>
+                    <div class="stat-value currency" id="statTotal">R$ --</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Com PIX</div>
+                    <div class="stat-value success" id="statPix">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Última Atualização</div>
+                    <div class="stat-value info" id="statUpdate" style="font-size: 16px;">--</div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <h2 class="section-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Análise de Erros
+                </h2>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Erros por Título</div>
+                        <div class="chart-container"><canvas id="chartTipo"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Erros por Semana (Últimas 4 semanas)</div>
+                        <div class="chart-container"><canvas id="chartDia"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Erros por Período do Dia</div>
+                        <div class="chart-container"><canvas id="chartPeriodo"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">PIX vs Boleto</div>
+                        <div class="chart-container"><canvas id="chartPix"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Média de Valor por Título</div>
+                        <div class="chart-container"><canvas id="chartValor"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table Section -->
+            <section class="table-container">
+                <div class="table-header">
+                    <div class="table-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Registros de Falha
+                    </div>
+                    <span class="record-count" id="recordCount">0 registros</span>
+                </div>
+                <div class="table-wrapper">
+                    <div id="tableContent">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span class="loading-text">Carregando dados...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 <span>Upperfy</span> · Sistema de Gestão de Pagamentos</p>
+        </footer>
+    </div>
+
+    <!-- Modal Lançar Pagamento -->
+    <div class="modal-overlay" id="modalLancar">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Confirmar Pagamento
+                </h3>
+                <button class="btn-close-modal" onclick="closeModal('modalLancar')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info-card">
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">ID</span>
+                        <span class="modal-info-value" id="modalLancarId">--</span>
+                    </div>
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">Identificação</span>
+                        <span class="modal-info-value" id="modalLancarIdentificacao">--</span>
+                    </div>
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">Valor</span>
+                        <span class="modal-info-value highlight" id="modalLancarValor">--</span>
+                    </div>
+                    <div class="modal-info-row">
+                        <span class="modal-info-label">Título</span>
+                        <span class="modal-info-value" id="modalLancarTitulo">--</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Link do Comprovante (opcional)</label>
+                    <input type="text" class="form-input" id="modalComprovanteLink" placeholder="Cole o link do comprovante aqui...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ou envie o arquivo do comprovante</label>
+                    <div class="file-upload-area" id="fileUploadArea" onclick="document.getElementById('fileInput').click()">
+                        <svg class="file-upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <p class="file-upload-text">Clique para selecionar ou <span>arraste o arquivo</span></p>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+                    <div class="file-name" id="fileName"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observações</label>
+                    <textarea class="form-textarea" id="modalObservacoes" placeholder="Adicione observações se necessário..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-secondary" onclick="closeModal('modalLancar')">Cancelar</button>
+                <button class="btn-modal btn-modal-success" id="btnConfirmarPagamento" onclick="confirmarPagamento()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Confirmar Pagamento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><span class="toast-message" id="toastMessage"></span></div>
+
+    <script>
+        // ==================== CONFIGURAÇÕES ====================
+        const LOGIN_URL = 'https://n8n.upperfy.com.br/webhook/b45a3be4-1f27-4b01-b341-loginplataforma4';
+        const WEBHOOK_URL = 'https://n8n.upperfy.com.br/webhook/ca75e9ca-4cf8-4bac-acc3-customer';
+        const SEARCH_URL = 'https://n8n.upperfy.com.br/webhook/buscabill';
+        const PAYMENT_URL = 'https://n8n.upperfy.com.br/webhook/pagoumanual';
+        const STORAGE_KEY = 'upperfy_customer_auth';
+
+        let allData = [];
+        let currentItem = null;
+        let charts = {};
+        let uploadedFileBase64 = null;
+        let uploadedFileName = null;
+
+        // ==================== AUTH ====================
+        function getStoredAuth() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) return null;
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function checkAuth() {
+            const auth = getStoredAuth();
+            if (auth && auth.autenticado) {
+                showApp();
+                updateUserInfo(auth);
+                loadData();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('appContainer').classList.remove('visible');
+        }
+
+        function showApp() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('appContainer').classList.add('visible');
+        }
+
+        function updateUserInfo(auth) {
+            if (auth.usuario) {
+                const nome = auth.usuario.nome || 'Usuário';
+                const iniciais = nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+                document.getElementById('userAvatar').textContent = iniciais;
+                document.getElementById('userName').textContent = nome;
+            }
+            if (auth.empresa) {
+                document.getElementById('userCompany').textContent = auth.empresa.nomeempresa || '--';
+            }
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            const senha = document.getElementById('senhaInput').value;
+            const btnLogin = document.getElementById('btnLogin');
+            const errorEl = document.getElementById('loginError');
+
+            if (!email || !senha) {
+                errorEl.textContent = 'Preencha todos os campos.';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            btnLogin.disabled = true;
+            btnLogin.textContent = 'Entrando...';
+            errorEl.classList.remove('show');
+
+            try {
+                const response = await fetch(LOGIN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const result = await response.json();
+
+                if (result.autenticado) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
+                    showApp();
+                    updateUserInfo(result);
+                    loadData();
+                    showToast('Login realizado com sucesso!', 'success');
+                } else {
+                    errorEl.textContent = result.mensagem || 'Credenciais inválidas.';
+                    errorEl.classList.add('show');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                errorEl.textContent = 'Erro ao conectar. Tente novamente.';
+                errorEl.classList.add('show');
+            } finally {
+                btnLogin.disabled = false;
+                btnLogin.textContent = 'Entrar';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem(STORAGE_KEY);
+            showLogin();
+            document.getElementById('emailInput').value = '';
+            document.getElementById('senhaInput').value = '';
+            showToast('Sessão encerrada', 'success');
+        }
+
+        // ==================== SEARCH ====================
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length >= 3) {
+                searchTimeout = setTimeout(() => performSearch(query), 300);
+            } else {
+                closeSearchResults();
+            }
+        });
+
+        async function performSearch(query) {
+            const searchType = document.getElementById('searchType').value;
+            const auth = getStoredAuth();
+            
+            try {
+                const response = await fetch(SEARCH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        query, 
+                        tipo: searchType,
+                        ...auth
+                    })
+                });
+                
+                const result = await response.json();
+                let data = Array.isArray(result) ? result : (result.data || []);
+                
+                displaySearchResults(data);
+            } catch (error) {
+                console.error('Erro na busca:', error);
+                showToast('Erro ao buscar', 'error');
+            }
+        }
+
+        function displaySearchResults(data) {
+            const container = document.getElementById('searchResults');
+            const list = document.getElementById('searchResultsList');
+            const count = document.getElementById('searchResultsCount');
+            
+            count.textContent = `${data.length} resultado${data.length !== 1 ? 's' : ''} encontrado${data.length !== 1 ? 's' : ''}`;
+            
+            if (data.length === 0) {
+                list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--upperfy-text-muted);">Nenhum resultado encontrado</div>';
+            } else {
+                list.innerHTML = data.map(item => `
+                    <div class="search-result-item" onclick="scrollToItem(${item.id})">
+                        <span class="result-id">#${item.id}</span>
+                        <div class="result-info">
+                            <span class="result-identificacao">${item.identificacao || '--'}</span>
+                            <span class="result-descricao">${(item.descricao || '').substring(0, 60)}...</span>
+                        </div>
+                        <span class="result-valor">${formatCurrency(item.valor)}</span>
+                        <div class="result-badges">
+                            ${item.pix ? '<span class="badge badge-pix">PIX</span>' : '<span class="badge badge-boleto">Boleto</span>'}
+                            ${item.titulo ? `<span class="badge badge-tipo">${item.titulo}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            container.classList.add('show');
+        }
+
+        function closeSearchResults() {
+            document.getElementById('searchResults').classList.remove('show');
+        }
+
+        function scrollToItem(id) {
+            closeSearchResults();
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.style.background = 'rgba(249, 115, 22, 0.2)';
+                setTimeout(() => { row.style.background = ''; }, 2000);
+            }
+        }
+
+        // ==================== UTILS ====================
+        function formatCurrency(value) {
+            if (!value) return 'R$ 0,00';
+            let numValue = parseFloat(value.toString().replace(/[^\d,.-]/g, '').replace(',', '.'));
+            if (isNaN(numValue)) return 'R$ 0,00';
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return { date: '--', time: '--' };
+            const date = new Date(dateStr);
+            return {
+                date: date.toLocaleDateString('pt-BR'),
+                time: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+            };
+        }
+
+        function copyLinhaDigitavel(linha) {
+            navigator.clipboard.writeText(linha).then(() => showToast('Linha digitável copiada!', 'success'));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function toggleDescricao(id) {
+            const textEl = document.getElementById(`desc-text-${id}`);
+            const fullEl = document.getElementById(`desc-full-${id}`);
+            const btn = document.getElementById(`btn-ver-${id}`);
+            
+            if (fullEl.classList.contains('show')) {
+                fullEl.classList.remove('show');
+                textEl.classList.remove('hidden');
+                btn.textContent = 'Ver mais';
+            } else {
+                fullEl.classList.add('show');
+                textEl.classList.add('hidden');
+                btn.textContent = 'Ver menos';
+            }
+        }
+
+        function isValidUrl(string) {
+            if (!string) return false;
+            try { new URL(string); return true; } catch (_) { return false; }
+        }
+
+        // ==================== FILE UPLOAD ====================
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileNameEl = document.getElementById('fileName');
+            const uploadArea = document.getElementById('fileUploadArea');
+
+            // Show file name
+            fileNameEl.textContent = file.name;
+            fileNameEl.classList.add('show');
+            uploadArea.classList.add('has-file');
+            uploadedFileName = file.name;
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedFileBase64 = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Drag and drop
+        const uploadArea = document.getElementById('fileUploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--upperfy-primary)';
+                uploadArea.style.background = 'rgba(124, 58, 237, 0.1)';
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                uploadArea.style.background = '';
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                uploadArea.style.background = '';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    document.getElementById('fileInput').files = files;
+                    handleFileSelect({ target: { files } });
+                }
+            });
+        }
+
+        // ==================== MODALS ====================
+        function openModalLancar(item) {
+            currentItem = item;
+            uploadedFileBase64 = null;
+            uploadedFileName = null;
+            
+            document.getElementById('modalLancarId').textContent = '#' + item.id;
+            document.getElementById('modalLancarIdentificacao').textContent = item.identificacao || '--';
+            document.getElementById('modalLancarValor').textContent = formatCurrency(item.valor);
+            document.getElementById('modalLancarTitulo').textContent = item.titulo || '--';
+            document.getElementById('modalComprovanteLink').value = '';
+            document.getElementById('modalObservacoes').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').classList.remove('show');
+            document.getElementById('fileUploadArea').classList.remove('has-file');
+            
+            document.getElementById('modalLancar').classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+            currentItem = null;
+            uploadedFileBase64 = null;
+            uploadedFileName = null;
+        }
+
+        async function confirmarPagamento() {
+            if (!currentItem) return;
+
+            const auth = getStoredAuth();
+            const btnConfirmar = document.getElementById('btnConfirmarPagamento');
+            
+            const payload = {
+                // Dados do registro
+                registro: currentItem,
+                // Dados do comprovante
+                comprovante_link: document.getElementById('modalComprovanteLink').value,
+                comprovante_arquivo: uploadedFileBase64,
+                comprovante_nome: uploadedFileName,
+                observacoes: document.getElementById('modalObservacoes').value,
+                // Dados do localStorage (autenticação)
+                ...auth
+            };
+
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px;"></span> Enviando...';
+
+            try {
+                const response = await fetch(PAYMENT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                showToast('Registrado com sucesso!', 'success');
+                closeModal('modalLancar');
+                loadData(); // Recarrega os dados
+            } catch (error) {
+                console.error('Erro ao confirmar pagamento:', error);
+                showToast('Erro ao registrar. Tente novamente.', 'error');
+            } finally {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Confirmar Pagamento';
+            }
+        }
+
+        // ==================== CHARTS ====================
+        function updateCharts(data) {
+            // Destruir gráficos existentes
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+
+            const chartColors = {
+                primary: '#7C3AED',
+                accent: '#F97316',
+                success: '#10B981',
+                info: '#3B82F6',
+                danger: '#EF4444',
+                warning: '#FBBF24'
+            };
+
+            // 1. Erros por Título
+            const tipoCount = {};
+            data.forEach(item => {
+                const titulo = item.titulo || 'Não informado';
+                tipoCount[titulo] = (tipoCount[titulo] || 0) + 1;
+            });
+
+            charts.tipo = new Chart(document.getElementById('chartTipo'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(tipoCount),
+                    datasets: [{
+                        data: Object.values(tipoCount),
+                        backgroundColor: [chartColors.primary, chartColors.accent, chartColors.success, chartColors.info, chartColors.danger]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#A8A0B8', font: { size: 11 } } } }
+                }
+            });
+
+            // 2. Erros por Semana (Últimas 4 semanas)
+            const weeks = [];
+            const weekCount = {};
+            for (let i = 3; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - (i * 7));
+                const weekStart = new Date(d);
+                weekStart.setDate(d.getDate() - d.getDay());
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                const key = `${weekStart.getDate()}/${weekStart.getMonth()+1} - ${weekEnd.getDate()}/${weekEnd.getMonth()+1}`;
+                weeks.push({ key, start: weekStart, end: weekEnd });
+                weekCount[key] = 0;
+            }
+            data.forEach(item => {
+                if (item.data_erro) {
+                    const itemDate = new Date(item.data_erro);
+                    weeks.forEach(week => {
+                        if (itemDate >= week.start && itemDate <= week.end) {
+                            weekCount[week.key]++;
+                        }
+                    });
+                }
+            });
+
+            charts.dia = new Chart(document.getElementById('chartDia'), {
+                type: 'line',
+                data: {
+                    labels: weeks.map(w => w.key),
+                    datasets: [{
+                        label: 'Erros',
+                        data: weeks.map(w => weekCount[w.key]),
+                        borderColor: chartColors.accent,
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#A8A0B8', font: { size: 10 } }, grid: { color: 'rgba(124, 58, 237, 0.1)' } },
+                        y: { ticks: { color: '#A8A0B8' }, grid: { color: 'rgba(124, 58, 237, 0.1)' } }
+                    }
+                }
+            });
+
+            // 3. Erros por Período do Dia
+            const periodCount = { 'Manhã (6-12h)': 0, 'Tarde (12-18h)': 0, 'Noite (18-24h)': 0, 'Madrugada (0-6h)': 0 };
+            data.forEach(item => {
+                if (item.data_erro) {
+                    const hour = new Date(item.data_erro).getHours();
+                    if (hour >= 6 && hour < 12) periodCount['Manhã (6-12h)']++;
+                    else if (hour >= 12 && hour < 18) periodCount['Tarde (12-18h)']++;
+                    else if (hour >= 18) periodCount['Noite (18-24h)']++;
+                    else periodCount['Madrugada (0-6h)']++;
+                }
+            });
+
+            charts.periodo = new Chart(document.getElementById('chartPeriodo'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(periodCount),
+                    datasets: [{
+                        data: Object.values(periodCount),
+                        backgroundColor: [chartColors.warning, chartColors.accent, chartColors.primary, chartColors.info]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#A8A0B8', font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { color: '#A8A0B8' }, grid: { color: 'rgba(124, 58, 237, 0.1)' } }
+                    }
+                }
+            });
+
+            // 4. PIX vs Boleto
+            const pixCount = data.filter(i => i.pix).length;
+            const boletoCount = data.length - pixCount;
+
+            charts.pix = new Chart(document.getElementById('chartPix'), {
+                type: 'pie',
+                data: {
+                    labels: ['PIX', 'Boleto'],
+                    datasets: [{
+                        data: [pixCount, boletoCount],
+                        backgroundColor: [chartColors.success, chartColors.info]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#A8A0B8' } } }
+                }
+            });
+
+            // 5. Média de Valor por Título
+            const valorByTitulo = {};
+            const countByTitulo = {};
+            data.forEach(item => {
+                const titulo = item.titulo || 'Outros';
+                const valor = parseFloat((item.valor || '0').toString().replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+                valorByTitulo[titulo] = (valorByTitulo[titulo] || 0) + valor;
+                countByTitulo[titulo] = (countByTitulo[titulo] || 0) + 1;
+            });
+            
+            // Calcular média
+            const mediaByTitulo = {};
+            Object.keys(valorByTitulo).forEach(titulo => {
+                mediaByTitulo[titulo] = valorByTitulo[titulo] / countByTitulo[titulo];
+            });
+            
+            const sortedTitulos = Object.entries(mediaByTitulo).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            charts.valor = new Chart(document.getElementById('chartValor'), {
+                type: 'bar',
+                data: {
+                    labels: sortedTitulos.map(t => t[0]),
+                    datasets: [{
+                        data: sortedTitulos.map(t => t[1]),
+                        backgroundColor: chartColors.accent
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#A8A0B8', callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }, grid: { color: 'rgba(124, 58, 237, 0.1)' } },
+                        y: { ticks: { color: '#A8A0B8', font: { size: 10 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // ==================== TABLE ====================
+        function calculateStats(data) {
+            const count = data.length;
+            let total = 0;
+            let pixCount = 0;
+            
+            data.forEach(item => {
+                let valor = parseFloat((item.valor || '0').toString().replace(/[^\d,.-]/g, '').replace(',', '.')) || 0;
+                total += valor;
+                if (item.pix) pixCount++;
+            });
+            
+            document.getElementById('statCount').textContent = count;
+            document.getElementById('statTotal').textContent = formatCurrency(total);
+            document.getElementById('statPix').textContent = pixCount;
+            document.getElementById('statUpdate').textContent = new Date().toLocaleString('pt-BR');
+            document.getElementById('recordCount').textContent = `${count} registro${count !== 1 ? 's' : ''}`;
+        }
+
+        function renderTable(data) {
+            if (!data || data.length === 0) {
+                return `<div class="empty-state">
+                    <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                    <h3 class="empty-title">Nenhum pagamento pendente</h3>
+                    <p class="empty-description">Todos os pagamentos foram processados com sucesso.</p>
+                </div>`;
+            }
+
+            let html = `<table><thead><tr>
+                <th>Identificação</th><th>Valor</th><th>Tipo</th><th>Título</th><th>Descrição</th>
+                <th>Linha Digitável</th><th>Data</th><th>Boleto</th><th>Ação</th>
+            </tr></thead><tbody>`;
+
+            data.forEach((item, idx) => {
+                const date = formatDate(item.data_erro);
+                const hasLink = isValidUrl(item.boleto_link);
+                const hasLinha = item.linha_digitalizavel && item.linha_digitalizavel.trim();
+                const linhaEsc = hasLinha ? item.linha_digitalizavel.replace(/'/g, "\\'") : '';
+                const descricao = item.descricao || '--';
+                const titulo = item.titulo || '--';
+
+                html += `<tr data-id="${item.id}">
+                    <td class="cell-identificacao">${item.identificacao || '--'}</td>
+                    <td class="cell-valor">${formatCurrency(item.valor)}</td>
+                    <td>
+                        ${item.pix ? '<span class="badge badge-pix">PIX</span>' : '<span class="badge badge-boleto">Boleto</span>'}
+                    </td>
+                    <td class="cell-titulo">${titulo}</td>
+                    <td class="cell-descricao">
+                        <span class="desc-text" id="desc-text-${item.id}">${descricao.substring(0, 50)}${descricao.length > 50 ? '...' : ''}</span>
+                        <span class="desc-full" id="desc-full-${item.id}">${descricao}</span>
+                        ${descricao.length > 50 ? `<button class="btn-ver-mais" id="btn-ver-${item.id}" onclick="toggleDescricao(${item.id})">Ver mais</button>` : ''}
+                    </td>
+                    <td>${hasLinha ? `<span class="cell-linha" onclick="copyLinhaDigitavel('${linhaEsc}')" title="Clique para copiar">${item.linha_digitalizavel}</span>` : '<span class="no-link">--</span>'}</td>
+                    <td class="cell-data"><span class="date">${date.date}</span><span class="time">${date.time}</span></td>
+                    <td>${hasLink ? `<a href="${item.boleto_link}" target="_blank" class="btn-link"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>Abrir</a>` : '<span class="no-link">Sem link</span>'}</td>
+                    <td class="cell-actions">
+                        <button class="btn-action btn-lancar" onclick='openModalLancar(${JSON.stringify(item).replace(/'/g, "&#39;")})'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Lançar Pagamento
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // ==================== LOAD DATA ====================
+        async function loadData() {
+            const tableContent = document.getElementById('tableContent');
+            const btnRefresh = document.getElementById('btnRefresh');
+            const auth = getStoredAuth();
+            
+            btnRefresh.classList.add('loading');
+            tableContent.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span class="loading-text">Carregando dados...</span></div>';
+
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(auth)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const result = await response.json();
+                let data = Array.isArray(result) ? result : (result.data || result.items || result.records || []);
+                
+                allData = data;
+                calculateStats(data);
+                tableContent.innerHTML = renderTable(data);
+                updateCharts(data);
+                
+                document.getElementById('statusBadge').style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                document.getElementById('statusText').textContent = 'Conectado';
+                showToast('Dados atualizados!', 'success');
+            } catch (error) {
+                console.error('Erro:', error);
+                tableContent.innerHTML = `<div class="error-state"><div class="error-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><h3 class="error-title">Erro ao carregar</h3><p class="error-description">${error.message}</p></div>`;
+                showToast('Erro ao carregar', 'error');
+            } finally {
+                btnRefresh.classList.remove('loading');
+            }
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('emailInput').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('senhaInput').focus(); });
+            document.getElementById('senhaInput').addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
